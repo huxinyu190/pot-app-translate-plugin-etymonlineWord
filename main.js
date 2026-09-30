@@ -30,23 +30,33 @@ async function translate(text, from, to, options) {
         throw "No etymology found for: " + word;
     }
 
-    // 4. 抓中文页（中文缺失不阻断）
+    // 4. 抓中文页：与英文页之间加间隔，失败重试一次，避免连续请求被 Cloudflare 拦截
     let zhHtml = "";
-    try {
-        zhHtml = await fetchWord(fetch, resolvedWord, true);
-    } catch (e) {
-        zhHtml = "";
+    for (let attempt = 0; attempt < 2 && !zhHtml; attempt++) {
+        await sleep(attempt === 0 ? 600 : 1500);
+        try {
+            zhHtml = await fetchWord(fetch, resolvedWord, true);
+        } catch (e) {
+            zhHtml = "";
+        }
     }
     const zhMeaning = parseZhMeaning(zhHtml);
+    const zhEntries = parseEntries(zhHtml);
 
     // 5. 关联词
     const associations = parseRelated(enHtml);
 
-    // 6. 组装词典 JSON
+    // 6. 组装词典 JSON（中英对照：每个词性下先中文词源，后英文原文）
     const explanations = entries.map((entry, i) => {
         const explains = [];
         if (i === 0 && zhMeaning) {
             explains.push(zhMeaning);
+        }
+        const zhEntry = zhEntries[i];
+        if (zhEntry) {
+            for (const p of zhEntry.paragraphs) {
+                explains.push(p);
+            }
         }
         for (const p of entry.paragraphs) {
             explains.push(p);
@@ -59,6 +69,16 @@ async function translate(text, from, to, options) {
         result.associations = associations;
     }
     return result;
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        if (typeof setTimeout === "function") {
+            setTimeout(resolve, ms);
+        } else {
+            resolve();
+        }
+    });
 }
 
 // 兼容不同版本的 fetch 注入方式，并强制按文本解析响应（etymonline 返回 HTML，而非 JSON）
