@@ -40,7 +40,7 @@ async function main() {
   const battery = await translate("battery", "en", "zh", options);
   const ex = battery.explanations[0];
   console.log("=== battery ===");
-  console.log("trait:", ex.trait, "| explains 数:", ex.explains.length, "（期望 5 = 1概要 + 2中文段 + 2英文段）");
+  console.log("trait:", ex.trait, "| explains 数:", ex.explains.length, "（期望 6 = 2英文段 + 1分隔 + 1概要 + 2中文段）");
   ex.explains.forEach((p, i) => console.log(`  [${i}]`, p.slice(0, 38)));
 
   // 2. 多词性 run
