@@ -48,9 +48,17 @@ async function translate(text, from, to, options) {
     // associations 每条独立一行、不加粗（放词源段落）。
     const result = {};
 
-    // 概要（单词中文意思）加粗置顶
+    // 英文单词标题（从网站 h1 提取的词条名）+ 中文意思，均加粗置顶
+    const wordTitle = parseWordTitle(enHtml) || resolvedWord;
+    const explanations = [];
+    if (wordTitle) {
+        explanations.push({ trait: "", explains: [wordTitle] });
+    }
     if (zhMeaning) {
-        result.explanations = [{ trait: "", explains: [zhMeaning] }];
+        explanations.push({ trait: "", explains: [zhMeaning] });
+    }
+    if (explanations.length > 0) {
+        result.explanations = explanations;
     }
 
     // 英文词源段落（先）
@@ -233,6 +241,19 @@ function splitPos(text) {
         return { word: m[1].trim(), pos: m[2].trim() };
     }
     return { word: text.trim(), pos: null };
+}
+
+// 提取英文页 h1 里的词条主名（如 "Origin and history of <em>battery</em>" -> "battery"）
+function parseWordTitle(html) {
+    if (!html) return "";
+    const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
+    if (!h1) return "";
+    const em = h1[1].match(/<em[^>]*>([\s\S]*?)<\/em>/);
+    if (em) {
+        const t = stripTags(em[1]);
+        if (t) return t;
+    }
+    return stripTags(h1[1]);
 }
 
 function parseZhMeaning(html) {

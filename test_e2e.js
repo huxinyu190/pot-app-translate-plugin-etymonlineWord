@@ -39,7 +39,7 @@ async function main() {
   // 1. 正常词 battery（概要加粗放 explanations；段落放 associations，每条一行不加粗）
   const battery = await translate("battery", "en", "zh", options);
   console.log("=== battery ===");
-  console.log("explanations（概要，加粗）:", JSON.stringify(battery.explanations));
+  console.log("explanations（英文单词 + 中文意思，均加粗）:", JSON.stringify(battery.explanations));
   console.log("associations 条目数:", battery.associations.length, "（期望 8 = 空行 + 2英 + 空行 + 2中 + 空行 + 1关联）");
   battery.associations.forEach((a, i) => console.log(`  [${i}]`, JSON.stringify(a.slice(0, 32))));
 
