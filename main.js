@@ -64,8 +64,9 @@ async function translate(text, from, to, options) {
         if (ze) for (const p of ze.paragraphs) zhParas.push(p);
     }
 
-    // associations：英文段落 → 空行 → 中文段落 → 空行 → 关联词
-    const assoc = enParas.slice();
+    // associations：空行（概要后）→ 英文段落 → 空行 → 中文段落 → 空行 → 关联词
+    const assoc = [""];
+    for (const p of enParas) assoc.push(p);
     if (zhParas.length > 0) {
         assoc.push("");
         for (const p of zhParas) assoc.push(p);

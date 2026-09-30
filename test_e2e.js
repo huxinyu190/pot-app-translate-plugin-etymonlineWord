@@ -40,7 +40,7 @@ async function main() {
   const battery = await translate("battery", "en", "zh", options);
   console.log("=== battery ===");
   console.log("explanations（概要，加粗）:", JSON.stringify(battery.explanations));
-  console.log("associations 条目数:", battery.associations.length, "（期望 7 = 2英 + 空行 + 2中 + 空行 + 1关联）");
+  console.log("associations 条目数:", battery.associations.length, "（期望 8 = 空行 + 2英 + 空行 + 2中 + 空行 + 1关联）");
   battery.associations.forEach((a, i) => console.log(`  [${i}]`, JSON.stringify(a.slice(0, 32))));
 
   // 2. 多词性 run
