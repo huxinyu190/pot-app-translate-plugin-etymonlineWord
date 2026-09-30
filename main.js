@@ -46,27 +46,23 @@ async function translate(text, from, to, options) {
     // 5. 关联词
     const associations = parseRelated(enHtml);
 
-    // 6. 组装词典 JSON（英文在前、中文在后，中间加分隔标记）
+    // 6. 组装词典 JSON：单词中文意思置顶 → 英文原文 → 空行 → 中文词源
     const explanations = entries.map((entry, i) => {
         const explains = [];
-        // 先英文原文
+        // 1) 单词中文意思（概要）置顶
+        if (i === 0 && zhMeaning) {
+            explains.push(zhMeaning);
+        }
+        // 2) 英文原文
         for (const p of entry.paragraphs) {
             explains.push(p);
         }
-        // 再中文（概要 + 词源段落），前面加分隔标记
+        // 3) 空行分隔 + 中文词源
         const zhEntry = zhEntries[i];
-        const zhParts = [];
-        if (i === 0 && zhMeaning) {
-            zhParts.push(zhMeaning);
-        }
-        if (zhEntry) {
-            for (const p of zhEntry.paragraphs) {
-                zhParts.push(p);
-            }
-        }
-        if (zhParts.length > 0) {
-            explains.push("—— 中文释义 ——");
-            for (const p of zhParts) {
+        const zhParas = zhEntry ? zhEntry.paragraphs : [];
+        if (zhParas.length > 0) {
+            explains.push("");
+            for (const p of zhParas) {
                 explains.push(p);
             }
         }
