@@ -46,28 +46,29 @@ async function translate(text, from, to, options) {
     // 5. 关联词
     const associations = parseRelated(enHtml);
 
-    // 6. 组装词典 JSON：单词中文意思置顶 → 英文原文 → 空行 → 中文词源
-    const explanations = entries.map((entry, i) => {
-        const explains = [];
-        // 1) 单词中文意思（概要）置顶
-        if (i === 0 && zhMeaning) {
-            explains.push(zhMeaning);
-        }
-        // 2) 英文原文
-        for (const p of entry.paragraphs) {
-            explains.push(p);
-        }
-        // 3) 空行分隔 + 中文词源
+    // 6. 组装词典 JSON。
+    // pot-app 渲染规则：explanations 的每个元素是独立区块（explains[0] 加粗独行，
+    // explains 数组其余项会被空格连排一行）——因此每个段落必须单独占一个元素。
+    // 结构：概要置顶 → 每个词性：英文段落逐条 → 中文段落逐条（trait 标注 "xx 中文"）。
+    const explanations = [];
+    if (zhMeaning) {
+        explanations.push({ trait: "", explains: [zhMeaning] });
+    }
+    for (let i = 0; i < entries.length; i++) {
+        const pos = entries[i].pos || "";
         const zhEntry = zhEntries[i];
-        const zhParas = zhEntry ? zhEntry.paragraphs : [];
-        if (zhParas.length > 0) {
-            explains.push("");
-            for (const p of zhParas) {
-                explains.push(p);
-            }
+        const zhPos = pos ? pos + " 中文" : "中文";
+        // 英文段落（第一条带词性标签，其余标签留空以缩进对齐）
+        entries[i].paragraphs.forEach((p, j) => {
+            explanations.push({ trait: j === 0 ? pos : "", explains: [p] });
+        });
+        // 中文段落
+        if (zhEntry) {
+            zhEntry.paragraphs.forEach((p, j) => {
+                explanations.push({ trait: j === 0 ? zhPos : "", explains: [p] });
+            });
         }
-        return { trait: entry.pos || "", explains };
-    });
+    }
 
     const result = { explanations };
     if (associations.length > 0) {
