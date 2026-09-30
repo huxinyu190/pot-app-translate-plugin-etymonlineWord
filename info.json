@@ -1,0 +1,14 @@
+{
+  "id": "plugin.com.pot-app.etymonlineword",
+  "plugin_type": "translate",
+  "icon": "icon.svg",
+  "display": "Etymonline 词源",
+  "homepage": "https://github.com/pot-app/pot-app-translate-plugin-etymonlineWord",
+  "needs": [],
+  "language": {
+    "auto": "auto",
+    "zh_cn": "zh",
+    "zh_tw": "zh",
+    "en": "en"
+  }
+}
