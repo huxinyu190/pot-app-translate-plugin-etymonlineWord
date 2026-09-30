@@ -43,36 +43,41 @@ async function translate(text, from, to, options) {
     const zhMeaning = parseZhMeaning(zhHtml);
     const zhEntries = parseEntries(zhHtml);
 
-    // 5. 关联词
-    const associations = parseRelated(enHtml);
+    // 5. 组装词典 JSON。
+    // pot-app 渲染规则：explanations.explains[0] 加粗（放概要，唯一加粗处）；
+    // associations 每条独立一行、不加粗（放词源段落）。
+    const result = {};
 
-    // 6. 组装词典 JSON。
-    // pot-app 渲染规则：explanations 的每个元素是独立区块（explains[0] 加粗独行，
-    // explains 数组其余项会被空格连排一行）——因此每个段落必须单独占一个元素。
-    // 结构：概要置顶 → 每个词性：英文段落逐条 → 中文段落逐条（trait 标注 "xx 中文"）。
-    const explanations = [];
+    // 概要（单词中文意思）加粗置顶
     if (zhMeaning) {
-        explanations.push({ trait: "", explains: [zhMeaning] });
-    }
-    for (let i = 0; i < entries.length; i++) {
-        const pos = entries[i].pos || "";
-        const zhEntry = zhEntries[i];
-        const zhPos = pos ? pos + " 中文" : "中文";
-        // 英文段落（第一条带词性标签，其余标签留空以缩进对齐）
-        entries[i].paragraphs.forEach((p, j) => {
-            explanations.push({ trait: j === 0 ? pos : "", explains: [p] });
-        });
-        // 中文段落
-        if (zhEntry) {
-            zhEntry.paragraphs.forEach((p, j) => {
-                explanations.push({ trait: j === 0 ? zhPos : "", explains: [p] });
-            });
-        }
+        result.explanations = [{ trait: "", explains: [zhMeaning] }];
     }
 
-    const result = { explanations };
-    if (associations.length > 0) {
-        result.associations = associations;
+    // 英文词源段落（先）
+    const enParas = [];
+    for (const e of entries) {
+        for (const p of e.paragraphs) enParas.push(p);
+    }
+    // 中文词源段落（后）
+    const zhParas = [];
+    for (const ze of zhEntries) {
+        if (ze) for (const p of ze.paragraphs) zhParas.push(p);
+    }
+
+    // associations：英文段落 → 空行 → 中文段落 → 空行 → 关联词
+    const assoc = enParas.slice();
+    if (zhParas.length > 0) {
+        assoc.push("");
+        for (const p of zhParas) assoc.push(p);
+    }
+    const related = parseRelated(enHtml);
+    if (related.length > 0) {
+        assoc.push("");
+        for (const r of related) assoc.push(r);
+    }
+
+    if (assoc.length > 0) {
+        result.associations = assoc;
     }
     return result;
 }

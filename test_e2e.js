@@ -36,13 +36,12 @@ const utils = { tauriFetch: (url, opts) => mockFetch(url) };
 const options = { config: {}, utils };
 
 async function main() {
-  // 1. 正常词 battery（每段一个 explanations 元素，中英分组）
+  // 1. 正常词 battery（概要加粗放 explanations；段落放 associations，每条一行不加粗）
   const battery = await translate("battery", "en", "zh", options);
   console.log("=== battery ===");
-  console.log("explanations 条目数:", battery.explanations.length, "（期望 5 = 概要 + 英文2段 + 中文2段）");
-  battery.explanations.forEach((e, i) =>
-    console.log(`  [${i}] trait=${JSON.stringify(e.trait)} | ${e.explains[0].slice(0, 32)}`)
-  );
+  console.log("explanations（概要，加粗）:", JSON.stringify(battery.explanations));
+  console.log("associations 条目数:", battery.associations.length, "（期望 7 = 2英 + 空行 + 2中 + 空行 + 1关联）");
+  battery.associations.forEach((a, i) => console.log(`  [${i}]`, JSON.stringify(a.slice(0, 32))));
 
   // 2. 多词性 run
   const run = await translate("run", "en", "zh", options);
