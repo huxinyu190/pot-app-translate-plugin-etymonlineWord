@@ -4,19 +4,17 @@
   "icon": "icon.svg",
   "display": "Etymonline 词源",
   "homepage": "https://github.com/pot-app/pot-app-translate-plugin-etymonlineWord",
-  "needs": [],
-  "settings": [
+  "needs": [
     {
-      "field": "cfCookie",
-      "name": "Cloudflare Cookie（cf_clearance=...，失效后需更新）",
-      "type": "text",
-      "value": ""
+      "key": "cfCookie",
+      "display": "Cloudflare Cookie（填 cf_clearance=...，失效后需更新）",
+      "type": "input"
     },
     {
-      "field": "userAgent",
-      "name": "User-Agent（须与获取上述 Cookie 的浏览器一致）",
-      "type": "text",
-      "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
+      "key": "userAgent",
+      "display": "User-Agent（须与获取 Cookie 的浏览器一致）",
+      "type": "input",
+      "default": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
     }
   ],
   "language": {
