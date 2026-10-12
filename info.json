@@ -5,6 +5,20 @@
   "display": "Etymonline 词源",
   "homepage": "https://github.com/pot-app/pot-app-translate-plugin-etymonlineWord",
   "needs": [],
+  "settings": [
+    {
+      "field": "cfCookie",
+      "name": "Cloudflare Cookie（cf_clearance=...，失效后需更新）",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "field": "userAgent",
+      "name": "User-Agent（须与获取上述 Cookie 的浏览器一致）",
+      "type": "text",
+      "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
+    }
+  ],
   "language": {
     "auto": "auto",
     "zh_cn": "zh",

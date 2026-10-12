@@ -32,10 +32,35 @@ function mockFetch(url) {
   return Promise.resolve({ ok: true, status: 200, data: EMPTY });
 }
 
-const utils = { tauriFetch: (url, opts) => mockFetch(url) };
+const utils = { tauriFetch: (url, opts) => mockFetch(url, opts) };
 const options = { config: {}, utils };
 
 async function main() {
+  // 0. Cloudflare 配置：headers 注入验证
+  const captured = [];
+  const cfUtils = {
+    tauriFetch: (url, opts) => {
+      captured.push({ url, opts });
+      return Promise.resolve({ ok: false, status: 403, data: "" });
+    },
+  };
+  try {
+    await translate("battery", "en", "zh", {
+      config: { cfCookie: "cf_clearance=TESTTOKEN", userAgent: "TestUA/1.0" },
+      utils: cfUtils,
+    });
+  } catch (e) {
+    console.log("=== 403 场景 ===");
+    console.log("报错信息:", String(e).slice(0, 60), "...");
+    const req = captured[0];
+    console.log(
+      "headers 注入:",
+      req.opts.headers["Cookie"] === "cf_clearance=TESTTOKEN" && req.opts.headers["User-Agent"] === "TestUA/1.0"
+        ? "OK（Cookie + UA 均已附加）"
+        : "FAIL " + JSON.stringify(req.opts.headers)
+    );
+  }
+
   // 1. 正常词 battery（概要加粗放 explanations；段落放 associations，每条一行不加粗）
   const battery = await translate("battery", "en", "zh", options);
   console.log("=== battery ===");

@@ -1,6 +1,7 @@
 async function translate(text, from, to, options) {
     const { utils } = options;
-    const fetch = getFetch(utils);
+    const config = options.config || {};
+    const fetch = getFetch(utils, config);
 
     const word = String(text || "").trim().toLowerCase().split(/\s+/)[0];
     if (!word) {
@@ -101,8 +102,10 @@ function sleep(ms) {
     });
 }
 
-// 兼容不同版本的 fetch 注入方式，并强制按文本解析响应（etymonline 返回 HTML，而非 JSON）
-function getFetch(utils) {
+// 兼容不同版本的 fetch 注入方式，并强制按文本解析响应（etymonline 返回 HTML，而非 JSON）。
+// 2026-10 起 etymonline 启用 Cloudflare JS 挑战：纯 HTTP 请求会 403，
+// 需在插件设置中填入浏览器获取的 cf_clearance Cookie + 对应浏览器 UA。
+function getFetch(utils, config) {
     let rawFetch;
     if (utils && utils.tauriFetch) {
         rawFetch = utils.tauriFetch;
@@ -111,9 +114,18 @@ function getFetch(utils) {
     } else {
         throw "No fetch util available";
     }
-    // 关键：pot 的 tauriFetch 默认按 JSON 解析响应，遇到 HTML 会抛 "Failed to parse response"。
-    // 这里强制 responseType 为 Text（tauri v1 的 ResponseType.Text = 2），让 res.data 返回 HTML 字符串。
-    return (url, options) => rawFetch(url, Object.assign({}, options, { responseType: 2 }));
+    const headers = {};
+    const ua = config && config.userAgent ? String(config.userAgent).trim() : "";
+    if (ua) {
+        headers["User-Agent"] = ua;
+    }
+    const cookie = config && config.cfCookie ? String(config.cfCookie).trim() : "";
+    if (cookie) {
+        // 支持只填值或完整 "cf_clearance=值" 两种写法
+        headers["Cookie"] = cookie.includes("=") ? cookie : "cf_clearance=" + cookie;
+    }
+    return (url, options) =>
+        rawFetch(url, Object.assign({}, options, { responseType: 2, headers: Object.assign({}, (options && options.headers) || {}, headers) }));
 }
 
 function fetchWord(fetch, word, isZh) {
@@ -122,6 +134,9 @@ function fetchWord(fetch, word, isZh) {
         : "https://www.etymonline.com";
     const url = `${base}/word/${encodeURIComponent(word)}`;
     return fetch(url, { method: "GET" }).then((res) => {
+        if (res.status === 403) {
+            throw "Cloudflare 拦截 (403)：请在插件设置中填入有效的 cf_clearance Cookie 与对应浏览器的 User-Agent（获取方法见插件 README）。Cookie 失效后需重新获取。";
+        }
         if (!res.ok) {
             throw `Http Request Error\nHttp Status: ${res.status}`;
         }
